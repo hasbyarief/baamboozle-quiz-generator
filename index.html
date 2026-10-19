@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="id">
+	<head>
+		<meta charset="UTF-8">
+        <title>Quiz Practice | Baamboozle Mod</title>
+        <meta name="description" content="Fun interactive quiz game for any subject.">
+        <meta property="og:title" content="Quiz Practice | Baamboozle Mod">
+        <meta property="og:description" content="Fun interactive quiz game for any subject.">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="icon" type="image/png" href="https://media.baamboozle.com/bbzl-prod-eu-west-5/my-favicon/favicon-96x96.png" sizes="96x96" />
+		
+        <!-- Bootstrap & FontAwesome -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css">
+		
+        <!-- Comic Neue Font -->
+        <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intro.js/3.3.1/introjs.css" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/intro.js/3.3.1/intro.js"></script>
+        
+        <!-- Confetti & SheetJS -->
+        <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+        <!-- Baamboozle Original Styles -->
+		<link rel="stylesheet" href="https://media.baamboozle.com/bbzl-prod-eu-west-5/css/app.css?id=3ad377ca5fa1">
+		<link rel="stylesheet" href="https://media.baamboozle.com/bbzl-prod-eu-west-5/css/game.css?id=b6028c3dfd74">
+		<link rel="stylesheet" href="https://media.baamboozle.com/bbzl-prod-eu-west-5/css/baam-style-16-tiles.css">
+
+        <style>
+            /* Mengubah semua font ke Comic Neue / Comic Sans */
+            body, button, input, select, .modal-content, .squareNumber, .team-name-text, .team-score-text, .modal-text {
+                font-family: 'Comic Neue', 'Comic Sans MS', 'Chalkboard SE', 'Comic Sans', cursive !important;
+            }
+
+            /* Layout override untuk grid */
+            #grid {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                width: 100%;
+                height: calc(100vh - 160px);
+                padding: 0 2vw 2vh 2vw;
+                box-sizing: border-box;
+            }
+            #dynamic-grid {
+                display: grid;
+                grid-template-columns: repeat(6, 1fr);
+                grid-template-rows: repeat(4, 1fr);
+                gap: 1.5vmin;
+                width: 100%;
+                max-width: 96vw;
+                height: 100%;
+            }
+            .grid-square {
+                display: flex !important;
+                justify-content: center !important;
+                align-items: center !important;
+                border-radius: 15px;
+                box-shadow: 0 6px 10px rgba(0,0,0,0.2);
+                cursor: pointer;
+                width: 100% !important;
+                height: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                position: relative;
+                transition: transform 0.2s, box-shadow 0.2s;
+            }
+            .grid-square:hover {
+                transform: scale(1.02);
+                box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+            }
+            
+            /* Warna kotak yang ceria */
+            .btn-light { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; }
+            .btn-light:hover { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); color: #fff; }
+            .btn-dark { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; }
+            .btn-dark:hover { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); color: #fff; }
+            
+            .squareNumber { 
+                font-size: 6vmin; 
+                font-weight: bold; 
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                margin: 0 !important;
+                padding: 0 !important;
+                line-height: 1;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            }
+
+            /* Top Bar Styling */
+            .top-bar {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 15px;
+                padding: 15px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+                margin-bottom: 10px;
+                flex-wrap: wrap;
+            }
+            .top-bar select, .top-bar button {
+                padding: 10px 20px;
+                border-radius: 50px;
+                border: none;
+                font-size: 16px;
+                font-weight: bold;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+                cursor: pointer;
+                outline: none;
+                transition: all 0.2s;
+                background-color: white;
+                color: #4b367c;
+            }
+            .top-bar button:hover, .top-bar select:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+                background-color: #f8f9fa;
+            }
+            .answered { opacity: 0.2; pointer-events: none; }
+
+            /* Scoreboard */
+            #scoreboard-container {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 10px;
+                margin: 0 auto 5px auto;
+                width: 95vw;
+            }
+            .score-box {
+                flex: 1;
+                min-width: 120px;
+                max-width: 180px;
+                padding: 8px 15px;
+                border-radius: 12px;
+                background-color: #ffffff;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                transition: transform 0.3s, box-shadow 0.3s;
+                border: 3px solid #e2e8f0;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .score-container-intro {
+                transform: scale(1.1);
+                background-color: #fff9c4;
+                border: 3px solid #fbc02d;
+                box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+                z-index: 10;
+            }
+            .team-name-text { font-size: 1em; font-weight: 700; color: #555; text-transform: uppercase; margin: 0; }
+            .team-score-text { font-size: 1.6em; font-weight: bold; color: #2c3e50; line-height: 1; margin: 0; }
+
+            /* Styling Modal & Tombol di Dalamnya */
+            .panel-primary { border-radius: 15px; overflow: hidden; border: none; }
+            .panel-heading { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important; border: none !important; }
+            .panel-answer { background-color: #f1f5f9; border: 2px dashed #94a3b8; border-radius: 15px; }
+            
+            .modal-controls {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 15px;
+                margin-top: 20px;
+            }
+
+            /* Tombol Cek, Benar, Salah yang Baru */
+            .btn-control, .btn-control-fixed {
+                width: auto !important;
+                min-width: 160px !important;
+                max-width: none !important;
+                padding: 12px 25px !important;
+                height: auto !important;
+                font-size: 20px !important;
+                font-weight: 700 !important;
+                border-radius: 50px !important;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.2) !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 10px !important;
+                text-shadow: none !important;
+                border: none !important;
+                transition: transform 0.2s, box-shadow 0.2s !important;
+            }
+            .btn-control:hover {
+                transform: translateY(-3px) !important;
+                box-shadow: 0 6px 15px rgba(0,0,0,0.3) !important;
+            }
+            .btn-check { background-color: #3b82f6 !important; color: white !important; }
+            .btn-oops { background-color: #ef4444 !important; color: white !important; }
+            .btn-okay { background-color: #22c55e !important; color: white !important; }
+
+            @keyframes bounceTrophy { 
+                0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 
+                40% {transform: translateY(-30px);} 
+                60% {transform: translateY(-15px);} 
+            }
+        </style>
+	</head>
+	<body>
+
+		<script>
+            // Inisialisasi Synthesizer Suara menggunakan Tone.js
+            let synth;
+            function initTone() {
+                if(!synth) {
+                    synth = new Tone.Synth().toDestination();
+                    Tone.start();
+                }
+            }
+            function playSound(type) {
+                if(muted) return;
+                initTone();
+                const now = Tone.now();
+                if(type === 'click') {
+                    synth.triggerAttackRelease("C5", "32n");
+                } else if(type === 'reveal') {
+                    synth.triggerAttackRelease("E5", "16n");
+                } else if(type === 'correct') {
+                    synth.triggerAttackRelease("G5", "8n", now);
+                    synth.triggerAttackRelease("C6", "4n", now + 0.1);
+                } else if(type === 'wrong') {
+                    synth.triggerAttackRelease("Eb4", "8n", now);
+                    synth.triggerAttackRelease("C4", "2n", now + 0.2);
+                } else if(type === 'bad_special') {
+                    synth.triggerAttackRelease("G3", "8n", now);
+                    synth.triggerAttackRelease("C3", "2n", now + 0.2);
+                } else if(type === 'good_special') {
+                    synth.triggerAttackRelease("C5", "8n", now);
+                    synth.triggerAttackRelease("E5", "8n", now + 0.1);
+                    synth.triggerAttackRelease("G5", "4n", now + 0.2);
+                } else if(type === 'gameover') {
+                    synth.triggerAttackRelease("C5", "4n", now);
+                    synth.triggerAttackRelease("E5", "4n", now + 0.2);
+                    synth.triggerAttackRelease("G5", "4n", now + 0.4);
+                    synth.triggerAttackRelease("C6", "1n", now + 0.6);
+                }
+            }
+
+            // State game dinamis
+            let teamCount = 2;
+            let cardCount = 24;
+            let activeTeam = 1;
+            let scores = [0, 0, 0, 0, 0, 0];
+            let teamNames = ['Tim 1', 'Tim 2', 'Tim 3', 'Tim 4', 'Tim 5', 'Tim 6'];
+            let muted = false;
+            let answeredCount = 0;
+
+            function getActiveTeamName() { return teamNames[activeTeam - 1]; }
+            function getNextTeam() { return (activeTeam % teamCount) + 1; }
+            function getTeamName(team) { return teamNames[team - 1]; }
+            
+            function addScore(points) {
+                scores[activeTeam - 1] += points;
+                $(`#score-display-${activeTeam}`).text(scores[activeTeam - 1]);
+            }
+            
+            function endTurn(cardId) {
+                $('#square-' + cardId).addClass('answered').attr('onclick', '');
+                
+                $(`#team-box-${activeTeam}`).removeClass('score-container-intro');
+                activeTeam = (activeTeam % teamCount) + 1;
+                $(`#team-box-${activeTeam}`).addClass('score-container-intro');
+                
+                answeredCount++;
+                if(answeredCount >= cardCount) {
+                    setTimeout(() => {
+                        let maxScore = Math.max(...scores.slice(0, teamCount));
+                        let winners = [];
+                        for(let i = 0; i < teamCount; i++) {
+                            if(scores[i] === maxScore) winners.push(teamNames[i]);
+                        }
+                        
+                        let isDraw = winners.length > 1;
+                        let winnerText = isDraw ? "Permainan Seri!" : "Horee! Pemenangnya:";
+                        
+                        $('#winner-heading').text(winnerText);
+                        $('#winner-names-display').text(winners.join(" & "));
+                        $('#winner-score-display').text(`Skor: ${maxScore}`);
+                        
+                        playSound('gameover');
+                        triggerConfetti();
+                        
+                        $('#winner-modal').modal('show');
+                    }, 1000);
+                }
+            }
+
+            function triggerConfetti() {
+                var duration = 4 * 1000;
+                var animationEnd = Date.now() + duration;
+                var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+
+                function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+
+                var interval = setInterval(function() {
+                    var timeLeft = animationEnd - Date.now();
+                    if (timeLeft <= 0) { return clearInterval(interval); }
+                    var particleCount = 50 * (timeLeft / duration);
+                    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+                }, 250);
+            }
+            
+            function shark(pts) { addScore(-pts); } 
+            
+            function lifesaver(pts) {
+                if (teamCount > 1) {
+                    let targetTeam = getNextTeam();
+                    scores[targetTeam - 1] += pts;
+                    $(`#score-display-${targetTeam}`).text(scores[targetTeam - 1]);
+                } else {
+                    addScore(-pts); 
+                }
+            }
+		</script>
+
+        <div class="top-bar">
+            <!-- Pilihan jumlah kotak (8, 16, 24) -->
+            <select id="box-count-select" onchange="playSound('click'); generateGame()">
+                <option value="24" selected>24 Kotak</option>
+                <option value="16">16 Kotak</option>
+                <option value="8">8 Kotak</option>
+            </select>
+            
+            <!-- Input Prompt AI dan Tombol Generate -->
+            <input type="text" id="ai-prompt-input" placeholder="Masukkan topik soal..." style="padding: 10px 15px; border-radius: 8px; border: none; outline: none; width: 250px; font-family: inherit; box-shadow: 2px 2px 0px rgba(0,0,0,0.2);" onkeydown="if(event.key === 'Enter'){ playSound('click'); generateQuestionsFromAI(); }">
+            <button id="btn-generate-ai" onclick="playSound('click'); generateQuestionsFromAI()">
+                <i class="fa fa-magic"></i> Generate AI
+            </button>
+
+            <button data-target="#edit-teams" data-toggle="modal" onclick="playSound('click')">
+                <i class="fa fa-pencil"></i> Edit Tim
+            </button>
+
+            <button data-target="#edit-teams" data-toggle="modal" onclick="playSound('click')">
+                <i class="fa fa-users"></i> Edit Tim
+            </button>
+            <button onclick="playSound('click'); toggleMuted()">
+                <i id="audio-on" class="fa fa-volume-up"></i>
+                <i id="audio-off" class="fa fa-volume-off hidden"></i> Suara
+            </button>
+            <button onclick="playSound('click'); toggleFullScreen()">
+                <i class="fa fa-arrows-alt"></i> Layar Penuh
+            </button>
+        </div>
+
+        <div class="container-fluid text-center" style="margin-top: 5px;">
+            <div id="scoreboard-container"></div>
+        </div>
+
+        <script>
+            function renderScoreboardUI() {
+                let html = '';
+                for(let i = 1; i <= teamCount; i++) {
+                    let activeClass = i === activeTeam ? 'score-container-intro' : '';
+                    html += `
+                        <div class="score-box ${activeClass}" id="team-box-${i}">
+                            <span id="team-name-display-${i}" class="team-name-text">${teamNames[i-1]}</span>
+                            <span class="team-score team-score-text" id="score-display-${i}">${scores[i-1]}</span>
+                        </div>
+                    `;
+                }
+                $('#scoreboard-container').html(html);
+            }
+            
+            function toggleMuted() {
+                muted = !muted;
+                $('#audio-on').toggleClass('hidden');
+                $('#audio-off').toggleClass('hidden');
+            }
+            function toggleFullScreen() {
+                if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); } 
+                else if (document.exitFullscreen) { document.exitFullscreen(); }
+            }
+        </script>
+
+        <!-- Modal Popup Kemenangan -->
+        <div class="modal my-modal fade modal-vertical-centered" id="winner-modal" tabindex="-1" data-backdrop="static">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border: none; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); color: white; text-align: center; padding: 50px 20px;">
+                    <div style="font-size: 15vh; margin-bottom: 20px; animation: bounceTrophy 2s infinite;">🏆</div>
+                    <div style="font-size: 5vh; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);" id="winner-heading">Permainan Selesai!</div>
+                    <div style="font-size: 8vh; font-weight: 900; text-transform: uppercase; margin: 20px 0; text-shadow: 3px 3px 6px rgba(0,0,0,0.4); line-height: 1.2;" id="winner-names-display">Tim 1</div>
+                    <div style="font-size: 4vh; font-weight: bold; background: rgba(0,0,0,0.2); display: inline-block; padding: 10px 30px; border-radius: 50px;" id="winner-score-display">Skor: 100</div>
+                    <div style="margin-top: 40px;">
+                        <button class="btn btn-default btn-lg" style="color: #1e3c72; font-weight: bold; font-size: 3vh; padding: 15px 50px; border-radius: 50px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.2);" data-dismiss="modal" onclick="playSound('click'); setTimeout(() => $('#edit-teams').modal('show'), 500);">Main Lagi</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Edit Tim -->
+        <div class="modal my-modal fade modal-vertical-centered" id="edit-teams">
+            <div class="modal-dialog">
+                <div class="modal-content names-content" style="border-radius: 15px;">
+                    <div class="panel panel-primary box-shadow--4dp" style="border-radius: 15px;">
+                        <div class="panel-heading" style="border-radius: 15px 15px 0 0;">
+                            <div id="team-names-title" class="modal-title text-center" style="font-weight: bold; font-size: 24px;">Pengaturan Tim</div>
+                        </div>
+                        <div class="modal-body my-modal-body">
+                            <div class="row" style="margin-bottom: 15px;">
+                                <div class="col-xs-12 text-center">
+                                    <label style="font-size: 18px;">Jumlah Tim:</label>
+                                    <select id="team-count-select" class="form-control" style="width: 50%; margin: 0 auto; display: inline-block; font-size: 18px; height: auto; padding: 5px 10px;" onchange="changeTeamCount(this.value)">
+                                        <option value="1">1 Tim</option>
+                                        <option value="2" selected>2 Tim</option>
+                                        <option value="3">3 Tim</option>
+                                        <option value="4">4 Tim</option>
+                                        <option value="5">5 Tim</option>
+                                        <option value="6">6 Tim</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="team-inputs-container"></div>
+                        </div>
+                        <div class="modal-footer my-modal-footer">
+                            <button type="button" onclick="playSound('click'); saveTeamsAndRestart()" data-dismiss="modal" class="btn btn-primary" style="border-radius: 20px; font-weight: bold;"><i class="fa fa-check"></i>&nbsp;Mulai Ulang</button>
+                            <button type="button" onclick="playSound('click')" class="btn btn-default" data-dismiss="modal" style="border-radius: 20px; font-weight: bold;"><i class="fa fa-close"></i>&nbsp;Batal</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            function renderTeamInputs() {
+                let html = '';
+                for(let i = 1; i <= parseInt($('#team-count-select').val()); i++) {
+                    html += `
+                    <div class="row" style="margin-bottom:10px;">
+                        <div class="col-xs-8">
+                            <div class="team-label ${i===1?'':'hidden'}"><label>Nama</label></div>
+                            <input class="form-control my-input" type="text" value="${teamNames[i-1]}" id="team-input-${i}" maxlength="19" style="border-radius: 10px;" />
+                        </div>
+                        <div class="col-xs-4">
+                            <div class="team-label ${i===1?'':'hidden'}"><label>Skor</label></div>
+                            <input class="form-control score-input my-input" type="number" id="score-input-${i}" value="${scores[i-1]}" style="border-radius: 10px;" /> 
+                        </div>
+                    </div>`;
+                }
+                $('#team-inputs-container').html(html);
+            }
+            
+            function changeTeamCount(val) { renderTeamInputs(); }
+
+            function saveTeamsAndRestart() {
+                teamCount = parseInt($('#team-count-select').val());
+                for(let i = 1; i <= teamCount; i++) {
+                    teamNames[i-1] = $(`#team-input-${i}`).val() || `Tim ${i}`;
+                    scores[i-1] = parseInt($(`#score-input-${i}`).val()) || 0;
+                }
+                for(let i = teamCount; i < 6; i++) { scores[i] = 0; }
+                generateGame();
+            }
+            
+            $(document).ready(function() {
+                $('#team-count-select').val(teamCount);
+                renderTeamInputs();
+                renderScoreboardUI();
+            });
+        </script>
+
+        <div id="grid">
+            <div id="dynamic-grid"></div>
+        </div>
+
+        <div id="dynamic-modals"></div>
+
+        <script>
+            const defaultQuestions = [
+                {q: "Apa nama planet terbesar di tata surya kita?", a: "Yupiter"},
+                {q: "Siapakah Presiden pertama Republik Indonesia?", a: "Ir. Soekarno"},
+                {q: "Apa sebutan untuk hewan pemakan tumbuhan?", a: "Herbivora"},
+                {q: "Berapakah hasil dari 8 x 7?", a: "56"},
+                {q: "Di provinsi manakah letak Candi Borobudur?", a: "Jawa Tengah"},
+                {q: "Apa lambang dari sila ke-3 Pancasila?", a: "Pohon Beringin"},
+                {q: "Siapakah ilmuwan penemu lampu pijar?", a: "Thomas Alva Edison"},
+                {q: "Warna apa yang dihasilkan dari campuran merah dan kuning?", a: "Oranye"},
+                {q: "Apa nama samudera terluas di dunia?", a: "Samudera Pasifik"},
+                {q: "Berapakah jumlah kaki pada hewan laba-laba?", a: "Delapan"},
+                {q: "Apa nama ibukota dari negara Jepang?", a: "Tokyo"},
+                {q: "Benua apakah yang terkecil di dunia?", a: "Australia"},
+                {q: "Proses tumbuhan membuat makanannya sendiri disebut?", a: "Fotosintesis"},
+                {q: "1 kilometer sama dengan berapa meter?", a: "1000 meter"},
+                {q: "Apakah organ pernapasan utama pada ikan?", a: "Insang"},
+                {q: "Siapakah pencipta lagu kebangsaan Indonesia Raya?", a: "W.R. Supratman"},
+                {q: "Apa nama ibukota dari provinsi Jawa Timur?", a: "Surabaya"},
+                {q: "Hewan apa yang bernapas menggunakan paru-paru dan kulit?", a: "Katak (Amfibi)"},
+                {q: "Berapa besaran derajat pada sudut siku-siku?", a: "90 derajat"},
+                {q: "Gas apakah yang dihirup manusia saat bernapas?", a: "Oksigen"},
+                {q: "Apa nama senjata tradisional khas dari Jawa Barat?", a: "Kujang"},
+                {q: "Mata uang negara Korea Selatan adalah?", a: "Won"},
+                {q: "Berapakah hasil dari 100 dibagi 4?", a: "25"},
+                {q: "Provinsi apakah yang letaknya paling timur di Indonesia?", a: "Papua"}
+            ];
+
+            let customWords = null; // Tempat menyimpan soal yang di-generate
+
+            async function generateQuestionsFromAI() {
+                const input = document.getElementById('ai-prompt-input');
+                const topic = input.value.trim();
+                if (!topic) {
+                    alert("Silakan masukkan topik untuk di-generate AI.");
+                    input.focus();
+                    return;
+                }
+
+                const btn = document.getElementById('btn-generate-ai');
+                btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Membuat Soal...';
+                btn.disabled = true;
+
+                // Hitung kebutuhan soal (maksimal 20 untuk 24 kotak)
+                let currentCardCount = parseInt(document.getElementById('box-count-select').value);
+                let numQuestions = currentCardCount === 8 ? 6 : (currentCardCount === 16 ? 12 : 20);
+
+                try {
+                    const response = await fetch('/api/generate-questions', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ topic, count: numQuestions })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(result.error || `Server error (${response.status})`);
+                    }
+                    
+                    if (result.questions && Array.isArray(result.questions) && result.questions.length > 0) {
+                        customWords = result.questions;
+                        alert(`Berhasil membuat ${customWords.length} pertanyaan tentang "${topic}"! Game telah diperbarui.`);
+                        generateGame(); 
+                    } else {
+                        alert("Gagal membuat pertanyaan. AI tidak merespon dengan benar.");
+                    }
+                } catch (error) {
+                    console.error("Error generating AI content:", error);
+                    alert("Gagal menghasilkan soal: " + (error.message || "Terjadi kesalahan koneksi ke server AI."));
+                } finally {
+                    btn.innerHTML = '<i class="fa fa-magic"></i> Generate AI';
+                    btn.disabled = false;
+                }
+            }
+
+            function shuffle(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+
+            function generateGame() {
+                cardCount = parseInt(document.getElementById('box-count-select').value);
+                
+                let words = [];
+                if (customWords && customWords.length > 0) {
+                    words = [...customWords];
+                } else {
+                    words = [...defaultQuestions];
+                }
+
+                shuffle(words);
+                
+                let numSpecials = cardCount === 8 ? 2 : 4;
+                let numWords = cardCount - numSpecials;
+
+                if(words.length === 0) {
+                    alert("Data soal kosong, permainan gagal dimuat.");
+                    return;
+                }
+                while (words.length > 0 && words.length < numWords) {
+                    words = words.concat(words);
+                }
+                
+                let selectedWords = words.slice(0, numWords);
+                let cards = selectedWords.map(w => { return { type: 'question', data: { q: w.q, a: w.a } }; });
+
+                if (cardCount === 8) {
+                    cards.push({ type: 'trap' }, { type: 'gift' }); 
+                } else {
+                    cards.push({ type: 'trap' }, { type: 'shark' }, { type: 'gift' }, { type: 'thief' });
+                }
+                
+                shuffle(cards);
+
+                let gridHtml = '';
+                let modalsHtml = '';
+                let cols = cardCount === 24 ? 6 : 4; 
+
+                const dynamicGrid = document.getElementById('dynamic-grid');
+                if (cardCount === 24) {
+                    dynamicGrid.style.gridTemplateColumns = 'repeat(6, 1fr)';
+                    dynamicGrid.style.gridTemplateRows = 'repeat(4, 1fr)';
+                } else if (cardCount === 16) {
+                    dynamicGrid.style.gridTemplateColumns = 'repeat(4, 1fr)';
+                    dynamicGrid.style.gridTemplateRows = 'repeat(4, 1fr)';
+                } else if (cardCount === 8) {
+                    dynamicGrid.style.gridTemplateColumns = 'repeat(4, 1fr)';
+                    dynamicGrid.style.gridTemplateRows = 'repeat(2, 1fr)';
+                }
+
+                for(let i = 0; i < cardCount; i++) {
+                    let r = Math.floor(i / cols);
+                    let c = i % cols;
+                    let id = i + 1;
+                    let btnClass = (r + c) % 2 === 0 ? 'btn-light' : 'btn-dark';
+                    let card = cards[i];
+                    
+                    let numFontSize = cardCount === 8 ? '12vmin' : (cardCount === 16 ? '8vmin' : '6vmin');
+
+                    gridHtml += `
+                    <div class="grid-square ${btnClass} animated bounceInDown" style="animation-delay: ${i*0.02}s" data-target="#modal${id}" data-toggle="modal" id="square-${id}" onclick="playSound('click')">
+                        <div class="squareNumber" id="squareNumber-${id}" style="font-size: ${numFontSize};">${id}</div>
+                    </div>`;
+
+                    if (card.type === 'question') {
+                        modalsHtml += buildQuestionModal(id, card.data);
+                    } else {
+                        modalsHtml += buildSpecialModal(id, card.type);
+                    }
+                }
+
+                document.getElementById('dynamic-grid').innerHTML = gridHtml;
+                document.getElementById('dynamic-modals').innerHTML = modalsHtml;
+
+                answeredCount = 0;
+                activeTeam = 1;
+                renderScoreboardUI();
+            }
+
+            function buildQuestionModal(id, data) {
+                return `
+                <div class="modal fade question-type modal-card" id="modal${id}" tabindex="-1" data-backdrop="static">
+                    <div class="modal-dialog modal-dialog-100">
+                        <div class="modal-content text-center">
+                            <div class="panel panel-primary box-shadow--4dp">
+                                <div class="panel-heading">
+                                    <div class="modal-name modal-name-points">15 Poin</div>
+                                    <button class="close closeBig" data-dismiss="modal" type="button" onclick="playSound('click')" style="color: white; opacity: 0.8;">&times;</button>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="modal-problem modal-text" style="font-size: 5.5vh; font-weight: bold; padding: 40px 20px; line-height: 1.4; color: #2c3e50;" contenteditable="false">${data.q}</div>
+                                </div>
+                            </div>
+                            <div id="solution-${id}" class="panel panel-answer box-shadow--4dp hidden" style="margin-top: 20px; padding: 25px;">
+                                <div class="modal-solution modal-text" style="font-size: 4.5vh; font-weight: bold; color: #1e3c72;" contenteditable="false">${data.a}</div>
+                            </div>
+                            <div class="question-controls">
+                                <div class="modal-controls text-center no-select">
+                                    <!-- Tombol Salah (Awalnya Hilang) -->
+                                    <button class="btn btn-oops btn-control no-select" id="btn-salah-${id}" style="display: none;" data-dismiss="modal" onclick="doOops(${id})">
+                                        <i class="fa fa-times"></i>&nbsp;&nbsp;Salah!
+                                    </button>
+                                    
+                                    <!-- Tombol Cek (Awalnya Muncul) -->
+                                    <button class="btn btn-check btn-control no-select" id="check-${id}" onclick="doCheck(${id})">
+                                        <i class="fa fa-search"></i>&nbsp;&nbsp;Cek Jawaban
+                                    </button> 
+                                    
+                                    <!-- Tombol Benar (Awalnya Hilang) -->
+                                    <button class="btn btn-okay btn-control no-select" id="btn-benar-${id}" style="display: none;" data-dismiss="modal" onclick="doOkay(${id})">
+                                        <i class="fa fa-check"></i>&nbsp;&nbsp;Benar!
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            function buildSpecialModal(id, type) {
+                let imgUrl = `https://media.baamboozle.com/bbzl-prod-eu-west-5/img/power-ups/${type}.png`;
+                let headingClass = (type === 'trap' || type === 'thief') ? 'special-hdr-oops' : 'special-hdr-ok';
+                let instruction = '';
+                let buttons = '';
+
+                if (type === 'trap') {
+                    instruction = "Yah, ZONK! Tidak ada poin!";
+                    buttons = `<button class="btn btn-oops btn-control no-select" data-dismiss="modal" onclick="doTrap(${id})"><i class="fa fa-times"></i>&nbsp;&nbsp;Lanjut</button>`;
+                } else if (type === 'shark') {
+                    instruction = "Aduh! Kehilangan 20 poin!";
+                    buttons = `<button class="btn btn-okay btn-control no-select" data-dismiss="modal" onclick="doShark(${id})"><i class="fa fa-check"></i>&nbsp;&nbsp;Oke</button>`;
+                } else if (type === 'gift') {
+                    instruction = "Mantap! Mendapat bonus 25 poin!";
+                    buttons = `<button class="btn btn-okay btn-control no-select" data-dismiss="modal" onclick="doGift(${id})"><i class="fa fa-star"></i>&nbsp;&nbsp;Ambil!</button>`;
+                } else if (type === 'thief') {
+                    instruction = "Pilih untuk memberikan poin ke tim lawan:";
+                    buttons = `
+                        <button class="btn btn-oops btn-control no-select" data-dismiss="modal" onclick="doThief(${id}, 5)">5 Poin</button>
+                        <button class="btn btn-oops btn-control no-select" data-dismiss="modal" onclick="doThief(${id}, 15)">15 Poin</button>
+                        <button class="btn btn-oops btn-control no-select" data-dismiss="modal" onclick="doThief(${id}, 25)">25 Poin</button>
+                    `;
+                }
+
+                return `
+                <div class="modal fade special-type modal-card" id="modal${id}" tabindex="-1" data-backdrop="static">
+                    <div class="modal-dialog modal-dialog-100">
+                        <div class="modal-content">
+                            <div class="panel panel-primary box-shadow--4dp">
+                                <div class="panel-heading text-center ${headingClass}">
+                                    <button class="close closeBig" data-dismiss="modal" type="button" onclick="playSound('click')" style="color: white; opacity: 0.8;">&times;</button>
+                                    <div class="modal-name">&nbsp;</div>
+                                </div>
+                                <div class="panel-body text-center modal-text-small">
+                                    <img class="game-image modal-power-image img-responsive center-block" src="${imgUrl}" draggable="false" style="max-height: 250px;">
+                                </div>
+                            </div>
+                            <div class="panel panel-instruction panel-special box-shadow--4dp text-center modal-text" style="font-size: 30px; font-weight: bold; margin-top: 15px; padding: 20px;">
+                                <div class="panel-body">
+                                    <div class="modal-instruction">${instruction}</div>
+                                </div>
+                            </div>
+                            <div class="modal-controls text-center">${buttons}</div> 
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            function doCheck(id) {
+                playSound('reveal');
+                // Sembunyikan tombol cek
+                $(`#check-${id}`).hide();
+                // Munculkan tombol Salah dan Benar dengan mengubah display ke inline-flex
+                $(`#btn-salah-${id}`).css("display", "inline-flex").addClass("animated fadeInLeft faster");
+                $(`#btn-benar-${id}`).css("display", "inline-flex").addClass("animated fadeInRight faster");
+                // Munculkan panel jawaban
+                $(`#solution-${id}`).removeClass("hidden").css('visibility', 'visible').addClass("animated fadeInUp faster");
+            }
+
+            function doOkay(id) {
+                playSound('correct');
+                addScore(15);
+                endTurn(id);
+            }
+
+            function doOops(id) {
+                playSound('wrong');
+                $(`#squareNumber-${id}`).text("X");
+                endTurn(id);
+            }
+
+            function doTrap(id) {
+                playSound('bad_special');
+                addScore(0);
+                endTurn(id);
+            }
+
+            function doShark(id) {
+                playSound('bad_special');
+                shark(20);
+                endTurn(id);
+            }
+
+            function doGift(id) {
+                playSound('good_special');
+                addScore(25);
+                endTurn(id);
+            }
+
+            function doThief(id, points) {
+                playSound('bad_special');
+                lifesaver(points);
+                endTurn(id);
+            }
+
+            window.onload = function() {
+                generateGame();
+            };
+        </script>
+	</body>
+</html>
